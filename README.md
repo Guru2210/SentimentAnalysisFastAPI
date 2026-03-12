@@ -13,7 +13,7 @@ A lightweight, production-ready REST API built with **FastAPI** that predicts wh
 ### 1. Clone the repository
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/Guru2210/SentimentAnalysisFastAPI.git
 cd <your-project-folder>
 ```
 
