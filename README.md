@@ -14,7 +14,7 @@ A lightweight, production-ready REST API built with **FastAPI** that predicts wh
 
 ```bash
 git clone https://github.com/Guru2210/SentimentAnalysisFastAPI.git
-cd <your-project-folder>
+cd SentimentAnalysisFastAPI
 ```
 
 ### 2. Install dependencies
