@@ -1,18 +1,9 @@
-"""
-schemas.py
-Pydantic request/response models with full validation.
-"""
-
 from pydantic import BaseModel, Field, field_validator
 from typing import List
 
 from app.model import MAX_BATCH_SIZE, MAX_TEXT_LENGTH
 
-
-# ---------------------------------------------------------------------------
 # Shared validator
-# ---------------------------------------------------------------------------
-
 def _non_empty_stripped(value: str) -> str:
     """Strip whitespace and reject blank strings."""
     stripped = value.strip()
@@ -21,10 +12,7 @@ def _non_empty_stripped(value: str) -> str:
     return stripped
 
 
-# ---------------------------------------------------------------------------
 # Request schemas
-# ---------------------------------------------------------------------------
-
 class PredictRequest(BaseModel):
     text: str = Field(
         ...,
@@ -69,10 +57,7 @@ class BatchPredictRequest(BaseModel):
         return cleaned
 
 
-# ---------------------------------------------------------------------------
 # Response schemas
-# ---------------------------------------------------------------------------
-
 class PredictResponse(BaseModel):
     text: str
     sentiment: str

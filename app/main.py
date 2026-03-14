@@ -1,8 +1,3 @@
-"""
-main.py
-FastAPI application for the Sentiment Analysis service.
-"""
-
 import logging
 from contextlib import asynccontextmanager
 from typing import List
@@ -18,15 +13,11 @@ from app.schemas import (
 )
 from app.model import load_model, predict_text, predict_batch
 
-# ---------------------------------------------------------------------------
 # Logging
-# ---------------------------------------------------------------------------
-
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
 # Lifespan: fatal if model fails to load
-# ---------------------------------------------------------------------------
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -37,11 +28,7 @@ async def lifespan(app: FastAPI):
     yield
     logger.info("Shutting down service.")
 
-
-# ---------------------------------------------------------------------------
 # App
-# ---------------------------------------------------------------------------
-
 app = FastAPI(
     title="Sentiment Analysis API",
     description="Predicts Positive, Negative, or Neutral sentiment for text input.",
@@ -49,10 +36,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-
-# ---------------------------------------------------------------------------
 # Exception handlers
-# ---------------------------------------------------------------------------
 
 @app.exception_handler(ValueError)
 async def value_error_handler(request, exc: ValueError):
@@ -70,9 +54,7 @@ async def runtime_error_handler(request, exc: RuntimeError):
     )
 
 
-# ---------------------------------------------------------------------------
 # Routes
-# ---------------------------------------------------------------------------
 
 @app.get("/health", tags=["ops"])
 def health_check():

@@ -1,21 +1,12 @@
-"""
-sentiment_classifier.py
-Production-ready sentiment analysis using a fine-tuned Hugging Face model.
-"""
-
 import logging
 import threading
 from transformers import pipeline
 
-# ---------------------------------------------------------------------------
 # Public API surface
-# ---------------------------------------------------------------------------
 
 __all__ = ["load_model", "predict_text", "predict_batch"]
 
-# ---------------------------------------------------------------------------
 # Configuration
-# ---------------------------------------------------------------------------
 
 MODEL_ID = "Guru2210/finetuning-sentiment-model-3000-samples"
 NEUTRAL_CONFIDENCE_THRESHOLD = 0.60
@@ -28,16 +19,10 @@ MAX_BATCH_SIZE = 256   # Hard cap to prevent OOM on large payloads
 # length check against the model's true max_position_embeddings (typically 512).
 MAX_TEXT_LENGTH = 512
 
-# ---------------------------------------------------------------------------
 # Logging
-# ---------------------------------------------------------------------------
-
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
 # Thread-safe singleton loader
-# ---------------------------------------------------------------------------
-
 _classifier = None
 _lock = threading.Lock()
 
@@ -82,9 +67,7 @@ def _get_classifier():
     return _classifier
 
 
-# ---------------------------------------------------------------------------
 # Input validation
-# ---------------------------------------------------------------------------
 
 def _validate_text(text: str) -> None:
     """
@@ -103,9 +86,7 @@ def _validate_text(text: str) -> None:
         )
 
 
-# ---------------------------------------------------------------------------
 # Internal label mapper (single source of truth)
-# ---------------------------------------------------------------------------
 
 def _map_result(text: str, result: dict) -> dict:
     """
@@ -134,10 +115,7 @@ def _map_result(text: str, result: dict) -> dict:
         "confidence": round(confidence, 4),
     }
 
-
-# ---------------------------------------------------------------------------
 # Public API
-# ---------------------------------------------------------------------------
 
 def predict_text(text: str) -> dict:
     """
