@@ -1,10 +1,27 @@
 # Sentiment Analysis API
 
-A lightweight, production-ready REST API built with **FastAPI** that predicts whether a given piece of text has a **Positive**, **Negative**, or **Neutral** sentiment. Predictions are powered by a fine-tuned Hugging Face Transformer model (DistilBERT).
+A lightweight, production-ready REST API built with **FastAPI** that classifies text as **Positive**, **Negative**, or **Neutral**. Inference is powered by a custom **DistilBERT** model fine-tuned on the IMDb dataset and hosted on the Hugging Face Hub.
+
+**Model:** [`Guru2210/finetuning-sentiment-model-3000-samples`](https://huggingface.co/Guru2210/finetuning-sentiment-model-3000-samples)
 
 ---
 
-##  Setup Instructions
+## Project Structure
+
+```
+SentimentClassifier/
+├── app/
+│   ├── main.py        # FastAPI app, routes, and lifespan handler
+│   ├── model.py       # Model loading, inference logic, and constants
+│   └── schemas.py     # Pydantic request/response schemas
+├── Train.py           # Fine-tuning script (DistilBERT on IMDb)
+├── requirements.txt
+└── .env               # HF_TOKEN (not committed)
+```
+
+---
+
+## Setup Instructions
 
 **Prerequisites:**
 - Python 3.8 or higher
@@ -25,15 +42,19 @@ pip install -r requirements.txt
 
 ### 3. (Optional) Train the model
 
-If you wish to fine-tune the model from scratch on the IMDb dataset, run the training script.
-
-> **Note:** Requires a Hugging Face Access Token set as the `HF_TOKEN` environment variable.
+If you wish to fine-tune the model from scratch on the IMDb dataset, set your Hugging Face token and run the training script:
 
 ```bash
-python train.py
+# Windows
+set HF_TOKEN=your_token_here
+
+# macOS / Linux
+export HF_TOKEN=your_token_here
+
+python Train.py
 ```
 
-> You do **not** need to train the model to run the API. The API automatically downloads the pre-trained weights from the Hugging Face Hub on first startup.
+> You do **not** need to re-train to run the API. The model weights are downloaded automatically from the Hugging Face Hub on first startup.
 
 ### 4. Start the API server
 
@@ -42,11 +63,11 @@ uvicorn app.main:app --reload
 ```
 
 The service will be available at `http://127.0.0.1:8000`.  
-Interactive API documentation: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+Interactive API docs: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
 ---
 
-##  API Endpoints
+## API Endpoints
 
 ### `GET /health` — Health Check
 
@@ -54,22 +75,38 @@ Interactive API documentation: [http://127.0.0.1:8000/docs](http://127.0.0.1:800
 curl -X GET "http://127.0.0.1:8000/health"
 ```
 
----
-
-### `POST /predict` — Single Text Prediction
-
-```bash
-curl -X POST "http://127.0.0.1:8000/predict" \
-     -H "Content-Type: application/json" \
-     -d '{"text": "I absolutely love how fast the delivery was!"}'
+**Response:**
+```json
+{ "status": "ok" }
 ```
 
 ---
 
-### `POST /predict/batch` — Batch Prediction
+### `POST /v1/predict` — Single Text Prediction
 
 ```bash
-curl -X POST "http://127.0.0.1:8000/predict/batch" \
+curl -X POST "http://127.0.0.1:8000/v1/predict" \
+     -H "Content-Type: application/json" \
+     -d '{"text": "I absolutely love how fast the delivery was!"}'
+```
+
+**Response:**
+```json
+{
+  "text": "I absolutely love how fast the delivery was!",
+  "sentiment": "Positive",
+  "confidence": 0.9983
+}
+```
+
+> **Constraints:** Text must be non-empty and ≤ 512 characters.
+
+---
+
+### `POST /v1/predict/batch` — Batch Prediction
+
+```bash
+curl -X POST "http://127.0.0.1:8000/v1/predict/batch" \
      -H "Content-Type: application/json" \
      -d '{
            "texts": [
@@ -80,22 +117,43 @@ curl -X POST "http://127.0.0.1:8000/predict/batch" \
          }'
 ```
 
+**Response:**
+```json
+{
+  "count": 3,
+  "results": [
+    { "text": "This is the best service I have ever used.", "sentiment": "Positive", "confidence": 0.9971 },
+    { "text": "The food was okay, nothing special.", "sentiment": "Neutral", "confidence": 0.5312 },
+    { "text": "Terrible experience, I want my money back.", "sentiment": "Negative", "confidence": 0.9945 }
+  ]
+}
+```
+
+> **Constraints:** 1–256 texts per request; each text must be non-empty and ≤ 512 characters.
+
 ---
 
 ## Approach & Methodology
 
-This project fine-tunes a **DistilBERT** model via the Hugging Face `transformers` library on the **IMDb dataset**, rather than using a traditional approach like TF-IDF with Logistic Regression.
+This project fine-tunes a **DistilBERT** model via the Hugging Face `transformers` library on the **IMDb dataset**, rather than a traditional approach like TF-IDF + Logistic Regression.
 
 **Why DistilBERT?**
-- Transformer models natively understand deep contextual nuances and word associations, yielding significantly higher real-world accuracy.
-- DistilBERT is a distilled, lighter version of BERT that keeps inference times fast enough for a production web API.
+- Transformer models understand deep contextual nuances and word associations, yielding significantly higher real-world accuracy.
+- DistilBERT is a distilled, lighter version of BERT that keeps inference fast enough for a production web API.
 
-**Neutral Classification:**
-Since the IMDb dataset only contains binary labels (Positive/Negative), a custom thresholding approach is applied at the API layer: if the model's confidence score falls **below 0.60**, the prediction is overridden and classified as **Neutral**.
+**Training details:**
+- Dataset: 3,000 training samples / 300 test samples (shuffled from Stanford IMDb)
+- Epochs: 2 | Learning rate: 2e-5 | Batch size: 16 | Weight decay: 0.01
+- Metrics tracked: Accuracy & F1
+
+**Neutral classification:**  
+The IMDb dataset only has binary labels (Positive/Negative). A confidence-based heuristic is applied at inference time: if the model's confidence score falls **below 0.60**, the prediction is overridden to **Neutral**.
 
 ---
 
-##  Improvements
+## Potential Improvements
 
-- **Containerization:** Package the application with Docker to ensure a perfectly reproducible environment across any machine.
-- **Multi-class Training:** Fine-tune the model on a dataset that natively includes "Neutral" labels (e.g., [Twitter US Airline Sentiment](https://www.kaggle.com/datasets/crowdflower/twitter-airline-sentiment)), eliminating the need for confidence score heuristics.
+- **Containerization:** Package the application with Docker for a reproducible deployment environment.
+- **Multi-class Training:** Fine-tune on a dataset with native "Neutral" labels (e.g., [Twitter US Airline Sentiment](https://www.kaggle.com/datasets/crowdflower/twitter-airline-sentiment)) to replace the confidence heuristic.
+- **Async inference:** Move model inference to a background thread pool to avoid blocking the event loop under high concurrency.
+- **Rate limiting:** Add per-client rate limiting middleware to protect against abuse.
