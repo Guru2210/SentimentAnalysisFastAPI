@@ -93,3 +93,7 @@ coverage.xml
 *.bak
 tmp/
 temp/
+evaluate_model.py
+eval_results.txt
+Report.docx
+~$Report.docx

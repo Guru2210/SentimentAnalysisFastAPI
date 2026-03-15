@@ -8,7 +8,7 @@ __all__ = ["load_model", "predict_text", "predict_batch"]
 
 # Configuration
 
-MODEL_ID = "Guru2210/finetuning-sentiment-model-3000-samples"
+MODEL_ID = "Guru2210/Sentiment-Analysis-DistilBERT"
 NEUTRAL_CONFIDENCE_THRESHOLD = 0.60
 POSITIVE_LABEL = "LABEL_1"
 MAX_BATCH_SIZE = 256   # Hard cap to prevent OOM on large payloads

@@ -63,7 +63,7 @@ def main():
         return {"accuracy": accuracy, "f1": f1}
 
     # Training the Model
-    repo_name = "Guru2210/finetuning-sentiment-model-3000-samples"
+    repo_name = "Guru2210/Sentiment-Analysis-DistilBERT"
 
     training_args = TrainingArguments(
         output_dir=repo_name,
